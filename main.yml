@@ -1,0 +1,21 @@
+#VERSION: 
+---
+- hosts: all
+  sudo: yes
+  vars_files:
+    - vars.yml
+  tasks:
+  - name: make sure apt-add-repository is installed
+    apt: pkg=python-software-properties state=present #software-properties-common for Ubuntu 12.10 and later
+  - name: add nginx apt repo
+    apt_repository: repo='ppa:nginx/development' #want version 1.5 for websocket support
+  - name: update apt
+    apt: update_cache=yes
+  - name: install nginx
+    apt: pkg=nginx state=latest
+  - name: copy template
+    template: src=service.conf.j2 dest=/etc/nginx/sites-available/{{ service }}
+  - name: make site available
+    file: src=/etc/nginx/sites-available/{{ service }} dest=/etc/nginx/sites-enabled/{{ service }} state=link
+  - name: restart nginx
+    service: name=nginx state=restarted

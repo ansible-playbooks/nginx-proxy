@@ -1,0 +1,29 @@
+upstream {{ service }} {
+	server 127.0.0.1:{{ service_port }};
+}
+
+server {
+	listen 80;
+	server_name {{ service_domain }};
+	access_log /var/log/nginx/{{ service }}.log;
+
+	error_page 400 404 500 502 503 504 /50x.html;
+        location  /50x.html {
+                internal;
+                root /usr/share/nginx/www;
+        }
+
+  location / {
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header Host $http_host;
+		proxy_set_header X-NginX-Proxy true;
+
+		proxy_pass http://{{ service }}/;
+		proxy_redirect off;
+    
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+	}
+}
